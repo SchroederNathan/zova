@@ -71,7 +71,8 @@
                                      role="menu" 
                                      aria-orientation="vertical" 
                                      aria-labelledby="user-menu-button" 
-                                     tabindex="-1">
+                                     tabindex="-1"
+                                     style="display: none;">
                                     <a href="{{ route('profile.edit') }}" 
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
                                        role="menuitem" 
@@ -107,7 +108,7 @@
                 </div>
 
                 <!-- Mobile menu -->
-                <div x-show="mobileMenuOpen" class="sm:hidden" id="mobile-menu">
+                <div x-show="mobileMenuOpen" class="sm:hidden" id="mobile-menu" style="display: none;">
                     <div class="space-y-1 pt-2 pb-3">
                         <a href="{{ route('dashboard') }}" 
                            class="block border-l-4 {{ request()->routeIs('dashboard') ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800' }} py-2 pr-4 pl-3 text-base font-medium"

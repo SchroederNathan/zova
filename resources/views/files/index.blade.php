@@ -78,7 +78,8 @@
                                     x-transition:leave="transition ease-in duration-75"
                                     x-transition:leave-start="transform opacity-100 scale-100"
                                     x-transition:leave-end="transform opacity-0 scale-95"
-                                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+                                    style="display: none;">
                                     <div class="py-1">
                                         <a href="{{ route('storage-connections.edit', $connection) }}"
                                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">

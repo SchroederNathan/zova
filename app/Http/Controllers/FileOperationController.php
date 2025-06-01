@@ -44,6 +44,106 @@ class FileOperationController extends Controller
     }
 
     /**
+     * Preview a file from storage
+     */
+    public function preview(StorageConnection $connection, Request $request)
+    {
+        // Ensure user owns this connection
+        $this->authorize('view', $connection);
+
+        $path = $request->route('path');
+        
+        try {
+            $disk = $connection->getDisk();
+            
+            // Check if file exists
+            if (!$disk->exists($path)) {
+                if ($request->expectsJson()) {
+                    return response()->json(['error' => 'File not found'], 404);
+                }
+                return back()->withErrors(['error' => 'File not found.']);
+            }
+            
+            // Get file info
+            $filename = basename($path);
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $mimeType = $disk->mimeType($path) ?? 'application/octet-stream';
+            
+            // Handle different file types
+            if ($this->isImageFile($extension)) {
+                // For images, return the actual file content
+                $content = $disk->get($path);
+                return Response::make($content, 200, [
+                    'Content-Type' => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    'Cache-Control' => 'public, max-age=3600',
+                ]);
+            } elseif ($this->isTextFile($extension) || str_starts_with($mimeType, 'text/')) {
+                // For text files, return content in JSON for display
+                $content = $disk->get($path);
+                
+                // Limit content size for preview (1MB max)
+                if (strlen($content) > 1048576) {
+                    $content = substr($content, 0, 1048576) . "\n\n... (content truncated)";
+                }
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'content' => $content,
+                        'type' => 'text',
+                        'filename' => $filename,
+                        'size' => $disk->size($path),
+                    ]);
+                }
+                
+                return Response::make($content, 200, [
+                    'Content-Type' => 'text/plain; charset=utf-8',
+                ]);
+            } else {
+                // For non-previewable files
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'error' => 'Preview not available for this file type',
+                        'type' => 'unsupported',
+                        'extension' => $extension,
+                        'mimeType' => $mimeType,
+                    ], 422);
+                }
+                
+                return back()->withErrors(['error' => 'Preview not available for this file type.']);
+            }
+            
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Failed to preview file: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Failed to preview file: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Check if file is an image
+     */
+    private function isImageFile(string $extension): bool
+    {
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico']);
+    }
+
+    /**
+     * Check if file is a text file
+     */
+    private function isTextFile(string $extension): bool
+    {
+        return in_array($extension, [
+            'txt', 'md', 'markdown', 'csv', 'json', 'xml', 'yaml', 'yml',
+            'html', 'htm', 'css', 'js', 'ts', 'jsx', 'tsx', 'vue',
+            'php', 'py', 'rb', 'java', 'c', 'cpp', 'h', 'cs', 'go',
+            'rs', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh',
+            'sql', 'log', 'conf', 'ini', 'env', 'gitignore', 'dockerfile'
+        ]);
+    }
+
+    /**
      * Upload files to storage
      */
     public function upload(StorageConnection $connection, Request $request)

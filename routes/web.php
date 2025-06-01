@@ -50,6 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/files/{connection}/download/{path}', [FileOperationController::class, 'download'])
         ->where('path', '.*')
         ->name('files.download');
+    Route::get('/files/{connection}/preview/{path}', [FileOperationController::class, 'preview'])
+        ->where('path', '.*')
+        ->name('files.preview');
     Route::delete('/files/{connection}/delete/{path}', [FileOperationController::class, 'delete'])
         ->where('path', '.*')
         ->name('files.delete');
