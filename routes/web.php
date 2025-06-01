@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     // Storage Connections - Full CRUD resource routes
     Route::resource('storage-connections', StorageConnectionController::class);
     Route::post('/storage-connections/{storageConnection}/test', [StorageConnectionController::class, 'test'])->name('storage-connections.test');
+    Route::post('/storage-connections/{storageConnection}/mount-nas', [StorageConnectionController::class, 'mountNas'])->name('storage-connections.mount-nas');
+    Route::post('/storage-connections/{storageConnection}/unmount-nas', [StorageConnectionController::class, 'unmountNas'])->name('storage-connections.unmount-nas');
     
     // Debug route for testing form submission
     Route::post('/test-form', function(Request $request) {

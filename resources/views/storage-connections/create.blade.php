@@ -112,11 +112,9 @@
                                            name="aws_region" 
                                            id="aws_region"
                                            value="{{ old('aws_region') }}"
-                                           placeholder="us-east-1, us-east-2, eu-west-1, etc."
+                                           placeholder="us-east-1, eu-west-1, etc."
                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('aws_region') border-red-300 @enderror">
-                                    <p class="mt-1 text-sm text-gray-500">
-                                        Enter the AWS region where your bucket is located (e.g., us-east-1, us-east-2, eu-west-1)
-                                    </p>
+
                                     @error('aws_region')
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -216,26 +214,159 @@
                             <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
                                 <h4 class="text-sm font-medium text-gray-800 mb-2">Network Attached Storage Configuration</h4>
                                 <p class="text-sm text-gray-700">
-                                    Specify the local or network path to your storage location.
+                                    Connect to your NAS device either via local filesystem or SMB/CIFS network share.
                                 </p>
                             </div>
 
                             <div>
-                                <label for="nas_root_path" class="block text-sm font-medium text-gray-700">
-                                    Root Path
+                                <label for="nas_type" class="block text-sm font-medium text-gray-700">
+                                    Connection Type
                                 </label>
-                                <input type="text" 
-                                       name="nas_root_path" 
-                                       id="nas_root_path" 
-                                       value="{{ old('nas_root_path') }}"
-                                       placeholder="/mnt/nas or \\server\share"
-                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_root_path') border-red-300 @enderror">
+                                <select name="nas_type" 
+                                        id="nas_type" 
+                                        onchange="showNasTypeConfig()"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_type') border-red-300 @enderror">
+                                    <option value="">Select connection type</option>
+                                    <option value="local" {{ old('nas_type') === 'local' ? 'selected' : '' }}>Local Filesystem</option>
+                                    <option value="smb" {{ old('nas_type') === 'smb' ? 'selected' : '' }}>SMB/CIFS Network Share</option>
+                                </select>
                                 <p class="mt-1 text-sm text-gray-500">
-                                    Full path to the directory you want to manage
+                                    Choose how to connect to your NAS storage
                                 </p>
-                                @error('nas_root_path')
+                                @error('nas_type')
                                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                            </div>
+
+                            {{-- Local NAS Configuration --}}
+                            <div id="nas-local-config" class="space-y-4 hidden">
+                                <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                                    <p class="text-sm text-blue-800">
+                                        <strong>Local Filesystem:</strong> Use this if your NAS is already mounted to a local directory on this server.
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <label for="nas_root_path" class="block text-sm font-medium text-gray-700">
+                                        Root Path
+                                    </label>
+                                    <input type="text" 
+                                           name="nas_root_path" 
+                                           id="nas_root_path" 
+                                           value="{{ old('nas_root_path') }}"
+                                           placeholder="/mnt/nas or /path/to/mounted/share"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_root_path') border-red-300 @enderror">
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Full path to the directory you want to manage
+                                    </p>
+                                    @error('nas_root_path')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- SMB/CIFS NAS Configuration --}}
+                            <div id="nas-smb-config" class="space-y-4 hidden">
+                                <div class="bg-green-50 border border-green-200 rounded-md p-3">
+                                    <p class="text-sm text-green-800">
+                                        <strong>SMB/CIFS Network Share:</strong> Connect directly to your NAS over the network. This will automatically mount the share for you.
+                                    </p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="nas_host" class="block text-sm font-medium text-gray-700">
+                                            NAS Host/IP Address
+                                        </label>
+                                        <input type="text" 
+                                               name="nas_host" 
+                                               id="nas_host" 
+                                               value="{{ old('nas_host') }}"
+                                               placeholder="192.168.1.32 or nas.local"
+                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_host') border-red-300 @enderror">
+                                        @error('nas_host')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="nas_share" class="block text-sm font-medium text-gray-700">
+                                            Share Name
+                                        </label>
+                                        <input type="text" 
+                                               name="nas_share" 
+                                               id="nas_share" 
+                                               value="{{ old('nas_share') }}"
+                                               placeholder="home"
+                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_share') border-red-300 @enderror">
+                                        @error('nas_share')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="nas_username" class="block text-sm font-medium text-gray-700">
+                                            Username
+                                        </label>
+                                        <input type="text" 
+                                               name="nas_username" 
+                                               id="nas_username" 
+                                               value="{{ old('nas_username') }}"
+                                               placeholder="your-username"
+                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_username') border-red-300 @enderror">
+                                        @error('nas_username')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="nas_password" class="block text-sm font-medium text-gray-700">
+                                            Password
+                                        </label>
+                                        <input type="password" 
+                                               name="nas_password" 
+                                               id="nas_password" 
+                                               value="{{ old('nas_password') }}"
+                                               placeholder="your-password"
+                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_password') border-red-300 @enderror">
+                                        @error('nas_password')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="nas_domain" class="block text-sm font-medium text-gray-700">
+                                        Domain (Optional)
+                                    </label>
+                                    <input type="text" 
+                                           name="nas_domain" 
+                                           id="nas_domain" 
+                                           value="{{ old('nas_domain') }}"
+                                           placeholder="WORKGROUP or your-domain"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nas_domain') border-red-300 @enderror">
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Windows domain or workgroup (leave empty if not applicable)
+                                    </p>
+                                    @error('nas_domain')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                    <div class="flex">
+                                        <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.876c1.318 0 2.387-1.069 2.387-2.387L21 12c0-1.318-1.069-2.387-2.387-2.387H5.387C4.069 9.613 3 10.682 3 12l.325 4.613c0 1.318 1.069 2.387 2.387 2.387z"></path>
+                                        </svg>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-yellow-800">
+                                                <strong>Note:</strong> For SMB connections, the system will automatically mount your share to a secure location and manage it for you. Make sure the Laravel server has the necessary permissions to mount network shares.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -260,17 +391,7 @@
                             </div>
                         @endif
 
-                        {{-- Debug Information (remove in production) --}}
-                        @if(config('app.debug'))
-                            <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                                <h4 class="text-sm font-medium text-blue-800">Debug Info</h4>
-                                <p class="text-sm text-blue-700">
-                                    Form action: {{ route('storage-connections.store') }}<br>
-                                    CSRF Token: {{ csrf_token() }}<br>
-                                    User ID: {{ auth()->id() }}
-                                </p>
-                            </div>
-                        @endif
+                    
                     </div>
 
                     {{-- Form Actions --}}
@@ -320,6 +441,27 @@
             // Show selected provider config
             if (provider) {
                 document.getElementById(provider + '-config').classList.remove('hidden');
+                
+                // If NAS is selected, also check for NAS type
+                if (provider === 'nas') {
+                    showNasTypeConfig();
+                }
+            }
+        }
+
+        // Show/hide NAS type configuration sections
+        function showNasTypeConfig() {
+            const nasType = document.getElementById('nas_type').value;
+            
+            // Hide all NAS config sections
+            document.getElementById('nas-local-config').classList.add('hidden');
+            document.getElementById('nas-smb-config').classList.add('hidden');
+            
+            // Show selected NAS type config
+            if (nasType === 'local') {
+                document.getElementById('nas-local-config').classList.remove('hidden');
+            } else if (nasType === 'smb') {
+                document.getElementById('nas-smb-config').classList.remove('hidden');
             }
         }
 

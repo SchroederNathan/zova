@@ -85,26 +85,65 @@
                                 @if($storageConnection->provider === 's3')
                                     <div>
                                         <span class="font-medium text-gray-600">Region:</span>
-                                        <span class="ml-2 text-gray-800">{{ $storageConnection->config['region'] ?? 'N/A' }}</span>
+                                        <span class="ml-2 text-gray-800">{{ $storageConnection->s3_region ?? 'N/A' }}</span>
                                     </div>
                                     <div>
                                         <span class="font-medium text-gray-600">Bucket:</span>
-                                        <span class="ml-2 text-gray-800">{{ $storageConnection->config['bucket'] ?? 'N/A' }}</span>
+                                        <span class="ml-2 text-gray-800">{{ $storageConnection->s3_bucket ?? 'N/A' }}</span>
                                     </div>
                                 @elseif($storageConnection->provider === 'gcs')
                                     <div>
                                         <span class="font-medium text-gray-600">Project:</span>
-                                        <span class="ml-2 text-gray-800">{{ $storageConnection->config['project_id'] ?? 'N/A' }}</span>
+                                        <span class="ml-2 text-gray-800">{{ $storageConnection->gcs_project_id ?? 'N/A' }}</span>
                                     </div>
                                     <div>
                                         <span class="font-medium text-gray-600">Bucket:</span>
-                                        <span class="ml-2 text-gray-800">{{ $storageConnection->config['bucket'] ?? 'N/A' }}</span>
+                                        <span class="ml-2 text-gray-800">{{ $storageConnection->gcs_bucket ?? 'N/A' }}</span>
                                     </div>
                                 @elseif($storageConnection->provider === 'nas')
-                                    <div class="md:col-span-2">
-                                        <span class="font-medium text-gray-600">Path:</span>
-                                        <span class="ml-2 text-gray-800 font-mono text-xs">{{ $storageConnection->config['root_path'] ?? 'N/A' }}</span>
+                                    <div>
+                                        <span class="font-medium text-gray-600">Type:</span>
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            @if($storageConnection->nas_type === 'local') bg-blue-100 text-blue-800
+                                            @else bg-green-100 text-green-800
+                                            @endif">
+                                            {{ $storageConnection->nas_type === 'local' ? 'Local Filesystem' : 'SMB/CIFS Share' }}
+                                        </span>
                                     </div>
+                                    @if($storageConnection->nas_type === 'local')
+                                        <div class="md:col-span-2">
+                                            <span class="font-medium text-gray-600">Path:</span>
+                                            <span class="ml-2 text-gray-800 font-mono text-xs">{{ $storageConnection->nas_root_path ?? 'N/A' }}</span>
+                                        </div>
+                                    @else
+                                        <div>
+                                            <span class="font-medium text-gray-600">Host:</span>
+                                            <span class="ml-2 text-gray-800">{{ $storageConnection->nas_host ?? 'N/A' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Share:</span>
+                                            <span class="ml-2 text-gray-800">{{ $storageConnection->nas_share ?? 'N/A' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Username:</span>
+                                            <span class="ml-2 text-gray-800">{{ $storageConnection->nas_username ?? 'N/A' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Mount Status:</span>
+                                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                @if($storageConnection->nas_is_mounted) bg-green-100 text-green-800
+                                                @else bg-red-100 text-red-800
+                                                @endif">
+                                                {{ $storageConnection->nas_is_mounted ? 'Mounted' : 'Not Mounted' }}
+                                            </span>
+                                        </div>
+                                        @if($storageConnection->nas_is_mounted && $storageConnection->nas_mount_point)
+                                            <div class="md:col-span-2">
+                                                <span class="font-medium text-gray-600">Mount Point:</span>
+                                                <span class="ml-2 text-gray-800 font-mono text-xs">{{ $storageConnection->nas_mount_point }}</span>
+                                            </div>
+                                        @endif
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -153,6 +192,47 @@
                                 Test Connection
                             </button>
                         </div>
+
+                        {{-- NAS Mount Controls --}}
+                        @if($storageConnection->provider === 'nas' && $storageConnection->nas_type === 'smb')
+                            <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                                <h4 class="text-sm font-medium text-gray-800 mb-2">NAS Share Management</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    Control the mounting of your SMB/CIFS network share.
+                                </p>
+                                
+                                <div class="flex space-x-3">
+                                    @if($storageConnection->nas_is_mounted)
+                                        <button type="button" 
+                                                onclick="unmountNas()"
+                                                class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                            Unmount Share
+                                        </button>
+                                    @else
+                                        <button type="button" 
+                                                onclick="mountNas()"
+                                                class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3"></path>
+                                            </svg>
+                                            Mount Share
+                                        </button>
+                                    @endif
+                                    
+                                    <button type="button" 
+                                            onclick="refreshMountStatus()"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                        Refresh Status
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Update Form Actions --}}
@@ -224,6 +304,85 @@
                 button.innerHTML = originalText;
                 button.disabled = false;
             });
+        }
+
+        function mountNas() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Mounting...';
+            button.disabled = true;
+
+            // Make AJAX request to mount NAS
+            fetch(`{{ route('storage-connections.mount-nas', $storageConnection) }}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    // Reload page to update UI
+                    window.location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('❌ Error mounting NAS: ' + error.message);
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
+        function unmountNas() {
+            if (!confirm('Are you sure you want to unmount this NAS share?')) {
+                return;
+            }
+
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Unmounting...';
+            button.disabled = true;
+
+            // Make AJAX request to unmount NAS
+            fetch(`{{ route('storage-connections.unmount-nas', $storageConnection) }}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    // Reload page to update UI
+                    window.location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('❌ Error unmounting NAS: ' + error.message);
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
+        function refreshMountStatus() {
+            // Simply reload the page to get fresh status
+            window.location.reload();
         }
     </script>
 </x-app-layout>
