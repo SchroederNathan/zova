@@ -49,25 +49,27 @@
             @if(count($breadcrumbs) > 0)
                 <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
                     <nav class="flex" aria-label="Breadcrumb">
-                        <ol class="flex items-center space-x-2">
+                        <ol role="list" class="flex items-center space-x-4">
                             <li>
-                                <a href="{{ route('files.browse', $connection) }}" 
-                                   class="text-blue-600 hover:text-blue-800 font-medium">
-                                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7z"></path>
-                                    </svg>
-                                    Root
-                                </a>
+                                <div>
+                                    <a href="{{ route('files.browse', $connection) }}" 
+                                       class="text-gray-400 hover:text-gray-500">
+                                        <svg class="size-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                            <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span class="sr-only">Home</span>
+                                    </a>
+                                </div>
                             </li>
                             @foreach($breadcrumbs as $breadcrumb)
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <a href="{{ route('files.browse', ['connection' => $connection, 'path' => $breadcrumb['path']]) }}" 
-                                       class="ml-2 text-blue-600 hover:text-blue-800 font-medium">
-                                        {{ $breadcrumb['name'] }}
-                                    </a>
+                                <li>
+                                    <div class="flex items-center">
+                                        <svg class="size-5 shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                            <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                                        </svg>
+                                        <a href="{{ route('files.browse', ['connection' => $connection, 'path' => $breadcrumb['path']]) }}" 
+                                           class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">{{ $breadcrumb['name'] }}</a>
+                                    </div>
                                 </li>
                             @endforeach
                         </ol>

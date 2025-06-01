@@ -18,7 +18,7 @@ class StorageConnectionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('storage-connections.index', compact('connections'));
+        return view('files.index', compact('connections'));
     }
 
     /**
@@ -85,16 +85,16 @@ class StorageConnectionController extends Controller
                     $connectionData['s3_bucket'] = $validated['aws_bucket'];
                     $connectionData['s3_endpoint'] = $validated['aws_endpoint'] ?? null;
                     break;
-                    
+
                 case 'gcs':
                     $connectionData['gcs_project_id'] = $validated['gcs_project_id'];
                     $connectionData['gcs_key_file'] = $this->handleGcsKeyFile($validated['gcs_key_file']);
                     $connectionData['gcs_bucket'] = $validated['gcs_bucket'];
                     break;
-                    
+
                 case 'nas':
                     $connectionData['nas_type'] = $validated['nas_type'];
-                    
+
                     if ($validated['nas_type'] === 'local') {
                         $connectionData['nas_root_path'] = $validated['nas_root_path'];
                     } else {
@@ -104,7 +104,7 @@ class StorageConnectionController extends Controller
                         $connectionData['nas_username'] = $validated['nas_username'];
                         $connectionData['nas_password'] = $validated['nas_password'];
                         $connectionData['nas_domain'] = $validated['nas_domain'] ?? null;
-                        
+
                         // Generate mount point path
                         $userId = auth()->id();
                         $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $validated['name']);
@@ -135,7 +135,7 @@ class StorageConnectionController extends Controller
             }
 
             \Log::info('Connection created successfully');
-            return redirect()->route('storage-connections.index')
+            return redirect()->route('files.index')
                 ->with('success', 'Storage connection created successfully!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -157,7 +157,7 @@ class StorageConnectionController extends Controller
     {
         // Ensure user owns this connection
         $this->authorize('view', $storageConnection);
-        
+
         return view('storage-connections.show', compact('storageConnection'));
     }
 
@@ -167,7 +167,7 @@ class StorageConnectionController extends Controller
     public function edit(StorageConnection $storageConnection)
     {
         $this->authorize('update', $storageConnection);
-        
+
         return view('storage-connections.edit', compact('storageConnection'));
     }
 
@@ -185,7 +185,7 @@ class StorageConnectionController extends Controller
 
         $storageConnection->update($validated);
 
-        return redirect()->route('storage-connections.index')
+        return redirect()->route('files.index')
             ->with('success', 'Storage connection updated successfully!');
     }
 
@@ -195,10 +195,10 @@ class StorageConnectionController extends Controller
     public function destroy(StorageConnection $storageConnection)
     {
         $this->authorize('delete', $storageConnection);
-        
+
         $storageConnection->delete();
 
-        return redirect()->route('storage-connections.index')
+        return redirect()->route('files.index')
             ->with('success', 'Storage connection deleted successfully!');
     }
 
@@ -208,9 +208,9 @@ class StorageConnectionController extends Controller
     public function test(StorageConnection $storageConnection)
     {
         $this->authorize('view', $storageConnection);
-        
+
         $isWorking = $storageConnection->testConnection();
-        
+
         return response()->json([
             'success' => $isWorking,
             'message' => $isWorking ? 'Connection successful!' : 'Connection failed!'
@@ -223,16 +223,16 @@ class StorageConnectionController extends Controller
     public function mountNas(StorageConnection $storageConnection)
     {
         $this->authorize('update', $storageConnection);
-        
+
         if ($storageConnection->provider !== 'nas' || $storageConnection->nas_type !== 'smb') {
             return response()->json([
                 'success' => false,
                 'message' => 'This connection is not a mountable NAS share.'
             ]);
         }
-        
+
         $success = $storageConnection->mountNasShare();
-        
+
         return response()->json([
             'success' => $success,
             'message' => $success ? 'NAS share mounted successfully!' : 'Failed to mount NAS share.',
@@ -246,16 +246,16 @@ class StorageConnectionController extends Controller
     public function unmountNas(StorageConnection $storageConnection)
     {
         $this->authorize('update', $storageConnection);
-        
+
         if ($storageConnection->provider !== 'nas' || $storageConnection->nas_type !== 'smb') {
             return response()->json([
                 'success' => false,
                 'message' => 'This connection is not a mountable NAS share.'
             ]);
         }
-        
+
         $success = $storageConnection->unmountNasShare();
-        
+
         return response()->json([
             'success' => $success,
             'message' => $success ? 'NAS share unmounted successfully!' : 'Failed to unmount NAS share.',

@@ -62,9 +62,25 @@ class FileManagerController extends Controller
             $files = $disk->files($path);
             $directories = $disk->directories($path);
             
+            // Normalize the current path for comparison
+            $currentPath = rtrim($path, '/');
+            
             // Process directories first
             foreach ($directories as $directory) {
+                // Skip the current directory itself
+                $normalizedDirectory = rtrim($directory, '/');
+                if ($normalizedDirectory === $currentPath) {
+                    continue;
+                }
+                
                 $name = basename($directory);
+                
+                // Also skip if the directory name is the same as the current path basename
+                // This handles cases where the current directory appears in the listing
+                if (!empty($currentPath) && $name === basename($currentPath)) {
+                    continue;
+                }
+                
                 $items[] = [
                     'name' => $name,
                     'path' => $directory,

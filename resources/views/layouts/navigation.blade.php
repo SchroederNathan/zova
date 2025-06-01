@@ -15,11 +15,8 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('files.index')" :active="request()->routeIs('files.*')">
+                    <x-nav-link :href="route('files.index')" :active="request()->routeIs('files.*', 'storage-connections.*')">
                         {{ __('File Manager') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('storage-connections.index')" :active="request()->routeIs('storage-connections.*')">
-                        {{ __('Storage Connections') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -76,11 +73,8 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('files.index')" :active="request()->routeIs('files.*')">
+            <x-responsive-nav-link :href="route('files.index')" :active="request()->routeIs('files.*', 'storage-connections.*')">
                 {{ __('File Manager') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('storage-connections.index')" :active="request()->routeIs('storage-connections.*')">
-                {{ __('Storage Connections') }}
             </x-responsive-nav-link>
         </div>
 
